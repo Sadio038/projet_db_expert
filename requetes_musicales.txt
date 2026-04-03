@@ -1,0 +1,117 @@
+============================================================
+REQUÊTES SQL — BDD MUSICALE (Chinook)
+============================================================
+
+Structure utile de la BDD Chinook :
+  - artists  (ArtistId, Name)
+  - albums   (AlbumId, Title, ArtistId)
+  - tracks   (TrackId, Name, AlbumId, MediaTypeId, GenreId,
+              Composer, Milliseconds, Bytes, UnitPrice)
+
+------------------------------------------------------------
+1. Récupérer tous les albums
+------------------------------------------------------------
+SELECT * FROM albums;
+
+------------------------------------------------------------
+2. Récupérer tous les albums dont le titre contient "Great"
+------------------------------------------------------------
+SELECT * FROM albums WHERE Title LIKE '%Great%';
+
+-- LIKE '%mot%' signifie : contient "mot" n'importe où dans le titre
+-- Le % est un joker qui remplace n'importe quelle suite de caractères
+
+------------------------------------------------------------
+3. Donner le nombre total d'albums dans la base
+------------------------------------------------------------
+SELECT COUNT(*) FROM albums;
+
+-- COUNT(*) compte le nombre de lignes dans la table
+
+------------------------------------------------------------
+4. Supprimer tous les albums dont le nom contient "music"
+------------------------------------------------------------
+DELETE FROM albums WHERE Title LIKE '%music%';
+
+-- Attention : LIKE est insensible à la casse dans SQLite
+-- donc 'music', 'Music', 'MUSIC' seront tous supprimés
+
+------------------------------------------------------------
+5. Récupérer tous les albums écrits par AC/DC
+------------------------------------------------------------
+SELECT albums.*
+FROM albums
+JOIN artists ON albums.ArtistId = artists.ArtistId
+WHERE artists.Name = 'AC/DC';
+
+-- On fait une jointure entre albums et artists pour filtrer par nom d'artiste
+
+------------------------------------------------------------
+6. Récupérer tous les TITRES des albums de AC/DC
+------------------------------------------------------------
+SELECT albums.Title
+FROM albums
+JOIN artists ON albums.ArtistId = artists.ArtistId
+WHERE artists.Name = 'AC/DC';
+
+-- Même requête que la précédente, mais on ne sélectionne que le titre
+
+------------------------------------------------------------
+7. Récupérer la liste des titres de l'album "Let There Be Rock"
+------------------------------------------------------------
+SELECT tracks.Name
+FROM tracks
+JOIN albums ON tracks.AlbumId = albums.AlbumId
+WHERE albums.Title = 'Let There Be Rock';
+
+-- On joint tracks et albums pour filtrer par nom d'album
+
+------------------------------------------------------------
+8. Afficher le prix et la durée totale de "Let There Be Rock"
+------------------------------------------------------------
+SELECT SUM(tracks.UnitPrice) AS prix_total, SUM(tracks.Milliseconds) AS duree_totale_ms
+FROM tracks
+JOIN albums ON tracks.AlbumId = albums.AlbumId
+WHERE albums.Title = 'Let There Be Rock';
+
+-- SUM() additionne les valeurs de toutes les lignes
+-- La durée est en millisecondes dans Chinook
+
+------------------------------------------------------------
+9. Afficher le coût total de la discographie de "Deep Purple"
+------------------------------------------------------------
+SELECT SUM(tracks.UnitPrice) AS cout_total_discographie
+FROM tracks
+JOIN albums ON tracks.AlbumId = albums.AlbumId
+JOIN artists ON albums.ArtistId = artists.ArtistId
+WHERE artists.Name = 'Deep Purple';
+
+-- Double jointure : tracks → albums → artists
+-- On somme le prix de toutes les pistes de tous les albums de Deep Purple
+
+------------------------------------------------------------
+10. Créer l'album de ton artiste favori
+------------------------------------------------------------
+-- On insère l'artiste dans la table artists
+INSERT INTO artists (Name) VALUES ('Burna Boy');
+
+-- On insère l'album en utilisant le dernier id d'artiste inséré
+INSERT INTO albums (Title, ArtistId)
+VALUES ('African Giant', (SELECT ArtistId FROM artists WHERE Name = 'Burna Boy'));
+
+-- On insère une piste dans l'album
+INSERT INTO tracks (Name, AlbumId, MediaTypeId, GenreId, Composer, Milliseconds, Bytes, UnitPrice)
+VALUES (
+  'Ye',
+  (SELECT AlbumId FROM albums WHERE Title = 'African Giant'),
+  1,       -- MediaTypeId 1 = MPEG audio
+  1,       -- GenreId 1 = Rock (ou adapter selon le genre)
+  'Burna Boy',
+  214000,  -- Durée en millisecondes (~3min34)
+  3500000, -- Taille en bytes (estimation)
+  0.99     -- Prix unitaire standard
+);
+
+-- Note : tu peux ajouter autant de tracks que tu veux avec d'autres INSERT INTO tracks
+
+============================================================

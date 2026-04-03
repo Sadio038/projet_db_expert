@@ -1,0 +1,107 @@
+============================================================
+CONCEPTION DES BASES DE DONNÉES
+============================================================
+
+------------------------------------------------------------
+2.2.1. MOOCademy — Plateforme d'apprentissage en ligne
+------------------------------------------------------------
+
+TABLES :
+
+  courses (id, title, description)
+    → Un cours a un titre et une description
+
+  lessons (id, title, body, course_id)
+    → Une leçon a un titre et un body
+    → course_id est une clé étrangère vers courses
+    → Relation : un cours peut avoir plusieurs leçons (one-to-many)
+
+RELATIONS :
+  - courses → lessons : one-to-many (1 cours, N leçons)
+
+
+------------------------------------------------------------
+2.2.2. The Pinterest — Partage de pins et commentaires
+------------------------------------------------------------
+
+TABLES :
+
+  users (id, name)
+    → Un utilisateur a un nom
+
+  pins (id, image_url, user_id)
+    → Un pin contient l'URL d'une image
+    → user_id est une clé étrangère vers users
+    → Relation : un user peut créer plusieurs pins (one-to-many)
+
+  comments (id, body, user_id, pin_id)
+    → Un commentaire a un contenu (body)
+    → user_id : qui a commenté
+    → pin_id : sur quel pin est posté le commentaire
+    → Pas de commentaires de commentaires dans ce projet
+
+RELATIONS :
+  - users → pins : one-to-many
+  - users → comments : one-to-many
+  - pins → comments : one-to-many
+
+
+------------------------------------------------------------
+2.2.3. The News — Message board type Hacker News
+------------------------------------------------------------
+
+CONTEXTE : Les users postent des liens. On peut commenter un lien,
+ou commenter un commentaire (max 1 niveau de profondeur en plus).
+
+TABLES :
+
+  users (id, name)
+    → Un utilisateur a un nom
+
+  links (id, url, title, user_id)
+    → Un lien posté par un user
+    → user_id est une clé étrangère vers users
+
+  comments (id, body, user_id, link_id, parent_comment_id)
+    → body : le contenu du commentaire
+    → user_id : qui a commenté
+    → link_id : sur quel lien porte le commentaire (toujours renseigné)
+    → parent_comment_id : si c'est un commentaire de commentaire,
+      on stocke l'id du commentaire parent (sinon NULL)
+
+COMMENT SAVOIR OÙ SE TROUVE UN COMMENTAIRE DANS LA HIÉRARCHIE ?
+  - Si parent_comment_id IS NULL → c'est un commentaire direct du lien
+  - Si parent_comment_id IS NOT NULL → c'est une réponse à un commentaire
+  - On limite à 1 niveau : un commentaire de commentaire ne peut pas
+    lui-même avoir un parent_comment_id non nul
+
+RELATIONS :
+  - users → links : one-to-many
+  - links → comments : one-to-many
+  - comments → comments : one-to-many (auto-jointure via parent_comment_id)
+
+
+------------------------------------------------------------
+2.2.4. The Class — Site d'éducation en ligne
+------------------------------------------------------------
+
+CONTEXTE : Un élève peut s'inscrire à UN SEUL cours.
+Un cours peut avoir PLUSIEURS élèves.
+→ C'est une relation one-to-many (pas de many-to-many ici).
+
+TABLES :
+
+  courses (id, title)
+    → Un cours a un titre
+
+  students (id, name, course_id)
+    → Un élève a un nom
+    → course_id est une clé étrangère vers courses
+    → Un élève ne peut s'inscrire qu'à un seul cours
+
+RELATIONS :
+  - courses → students : one-to-many (1 cours, N élèves)
+    L'inscription est directement modélisée par course_id dans students.
+    Pas besoin de table de jointure car c'est un one-to-many strict.
+
+============================================================
